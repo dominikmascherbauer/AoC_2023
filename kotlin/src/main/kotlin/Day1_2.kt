@@ -1,0 +1,27 @@
+import java.io.File
+
+val numberMap = mapOf(
+    "one" to 1,
+    "two" to 2,
+    "three" to 3,
+    "four" to 4,
+    "five" to 5,
+    "six" to 6,
+    "seven" to 7,
+    "eight" to 8,
+    "nine" to 9
+)
+
+fun main() {
+    val x = File(ClassLoader.getSystemResource("day1").path)
+        .readLines()
+        .map { s ->
+            s.mapIndexed { i, c ->
+                if (c.isDigit()) c.digitToInt() else numberMap.entries.firstOrNull {
+                    s.drop(i).startsWith(it.key)
+                }?.value
+            }.filterNotNull()
+        }
+        .sumOf { it.first() * 10 + it.last() }
+    println(x)
+}
