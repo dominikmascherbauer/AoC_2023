@@ -1,5 +1,3 @@
-import java.io.File
-
 val numberMap = mapOf(
     "one" to 1,
     "two" to 2,
@@ -13,15 +11,23 @@ val numberMap = mapOf(
 )
 
 fun main() {
-    val x = File(ClassLoader.getSystemResource("day1").path)
-        .readLines()
-        .map { s ->
+    fun part1(input: List<String>): Int =
+        input.map { s -> s.filter { it.isDigit() }
+                .map { it.digitToInt() }
+            }
+            .sumOf { it.first() * 10 + it.last() }
+
+    fun part2(input: List<String>): Int =
+        input.map { s ->
             s.mapIndexed { i, c ->
                 if (c.isDigit()) c.digitToInt() else numberMap.entries.firstOrNull {
                     s.drop(i).startsWith(it.key)
                 }?.value
             }.filterNotNull()
         }
-        .sumOf { it.first() * 10 + it.last() }
-    println(x)
+            .sumOf { it.first() * 10 + it.last() }
+
+    val input = readInput("Day01")
+    println(part1(input))
+    println(part2(input))
 }
