@@ -1,31 +1,34 @@
-import kotlin.math.max
-
-val maxVals = mapOf(
+val maxCubes = mapOf(
     "red" to 12,
     "green" to 13,
     "blue" to 14
 )
 
+fun String.parseDigit() = this.dropWhile { !it.isDigit() }.takeWhile { it.isDigit() }.toInt()
+fun String.parseColor() = this.dropWhile { !it.isLetter() }.takeWhile { it.isLetter() }
+fun List<String>.parseGames() =
+    this.map { l ->
+        l.drop(l.indexOf(':'))
+            .split(';')
+            .flatMap { it.split(',') }
+            .map { it.parseColor() to it.parseDigit() }
+    }
+
 fun main() {
-    fun part1(input: List<String>): Int {
-        val x = input
-            .map { line -> line.dropWhile { !it.isDigit() }.takeWhile { it.isDigit() }.toInt() to line.dropWhile { it != ':' }.drop(1).split(';') }
-            .filter { p -> p.second.all { it.split(',').all { it.dropWhile { !it.isDigit() }.takeWhile { it.isDigit() }.toInt() <= maxVals[it.dropWhile { !it.isLetter() }]!! } } }
-            .map { it.first }
-            .sum()
-        return x
-    }
+    fun part1(input: List<String>): Int = input
+        .parseGames()
+        .mapIndexed { i, l -> i+1 to l }
+        .filter { game -> game.second.all { it.second <= maxCubes.getValue(it.first) } }
+        .sumOf { it.first }
 
-    fun part2(input: List<String>): Int {
-        val x = input
-            .map { line -> line.dropWhile { !it.isDigit() }.takeWhile { it.isDigit() }.toInt() to line.dropWhile { it != ':' }.drop(1).split(';') }
-            .map { line -> line.second.flatMap { it.split(',').map { it.dropWhile { !it.isLetter() } to it.dropWhile { !it.isDigit() }.takeWhile { it.isDigit() }.toInt() } } }
-            .map { line -> line.fold(mutableListOf(0,0,0)) { acc, pair -> if (pair.first == "red") acc[0] = max(acc[0], pair.second) else if (pair.first == "green") acc[1] = max(acc[1], pair.second) else acc[2] = max(acc[2], pair.second); acc } }
-            .map { line -> line.fold(1) { acc, i -> acc * i } }
-        print(x)
-
-        return 0
-    }
+    fun part2(input: List<String>): Int = input
+        .parseGames()
+        .sumOf { game ->
+            game.groupBy({ it.first }) { it.second }
+                .values
+                .map { it.max() }
+                .reduce(Int::times)
+        }
 
     val input = readInput("Day02")
     println(part1(input))
