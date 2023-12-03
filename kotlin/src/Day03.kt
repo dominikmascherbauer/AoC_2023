@@ -1,48 +1,46 @@
+fun List<String>.parseWith(regex: Regex) =
+    foldIndexed(sequenceOf<Pair<Int, MatchResult>>()) { i, acc, s -> regex.findAll(s).map { i to it }.plus(acc) }
+
+fun Sequence<Pair<Int, MatchResult>>.toSymbolMap() =
+    groupBy({ it.first }) { it.second.range.first }
+fun List<String>.getNumberMap() =
+    parseWith(Regex("[0-9]+"))
+        .groupBy({ it.first }) { it.second.value.toInt() to it.second.range.first-1..it.second.range.last+1 }
+
 fun main() {
-    fun part1(input: List<String>): Int {
-        val symbols = mutableListOf<Pair<Int, Int>>()
-        val numbers = mutableListOf<Pair<Int, Pair<Int, Pair<Int, Int>>>>()
+    fun part1(input: List<String>, numbers: Map<Int, List<Pair<Int, IntRange>>>, symbols: Map<Int, List<Int>>): Int = numbers
+        .flatMap { row ->
+            row.value
+                .filter { num ->
+                    symbols.getOrDefault(row.key - 1, listOf())
+                        .plus(symbols.getOrDefault(row.key, listOf()))
+                        .plus(symbols.getOrDefault(row.key + 1, listOf()))
+                        .any { it in num.second }
+                }
+                .map { it.first }
+        }
+        .sum()
 
-        input
-            .onEachIndexed { i1, s -> s.mapIndexed { i2, c -> c to (i1 to i2) }.filter { !it.first.isDigit() && it.first != '.' }.onEach { symbols.add(it.second) } }
-            .onEachIndexed { i1, s -> s.mapIndexed { i2, c -> c to (i1 to i2) }.filter { it.first.isDigit() }.asSequence().forEach {
-                if (numbers.none { n -> n.second.first == it.second.first && n.second.second.first <= it.second.second && it.second.second <= n.second.second.second }) numbers.add(
-                    s.drop(it.second.second).takeWhile { it.isDigit() }
-                        .toInt() to (i1 to (it.second.second to it.second.second + s.drop(it.second.second)
-                        .takeWhile { it.isDigit() }.length - 1))
-                )
-            }}
-
-        val res = numbers
-            .filter { n -> symbols.any { n.second.first - 1 <= it.first && it.first <= n.second.first + 1 && n.second.second.first - 1 <= it.second && it.second <= n.second.second.second + 1 } }
-            .sumOf { it.first }
-
-        return res
-    }
-
-    fun part2(input: List<String>): Int {
-        val symbols = mutableListOf<Pair<Int, Int>>()
-        val numbers = mutableListOf<Pair<Int, Pair<Int, Pair<Int, Int>>>>()
-
-        input
-            .onEachIndexed { i1, s -> s.mapIndexed { i2, c -> c to (i1 to i2) }.filter { it.first == '*' }.onEach { symbols.add(it.second) } }
-            .onEachIndexed { i1, s -> s.mapIndexed { i2, c -> c to (i1 to i2) }.filter { it.first.isDigit() }.asSequence().forEach {
-                if (numbers.none { n -> n.second.first == it.second.first && n.second.second.first <= it.second.second && it.second.second <= n.second.second.second }) numbers.add(
-                    s.drop(it.second.second).takeWhile { it.isDigit() }
-                        .toInt() to (i1 to (it.second.second to it.second.second + s.drop(it.second.second)
-                        .takeWhile { it.isDigit() }.length - 1))
-                )
-            }}
-
-        val res = symbols
-            .map { s -> numbers.filter { n -> n.second.first - 1 <= s.first && s.first <= n.second.first + 1 && n.second.second.first - 1 <= s.second && s.second <= n.second.second.second + 1 } }
-            .filter { it.size == 2 }
-            .map { it[0].first * it[1].first }
-            .sum()
-        return res
-    }
+    fun part2(input: List<String>, numbers: Map<Int, List<Pair<Int, IntRange>>>, gears: Map<Int, List<Int>>): Int = gears
+            .flatMap { row ->
+                row.value
+                    .map { g ->
+                        numbers.getOrDefault(row.key - 1, listOf())
+                            .plus(numbers.getOrDefault(row.key, listOf()))
+                            .plus(numbers.getOrDefault(row.key + 1, listOf()))
+                            .filter { g in it.second }
+                            .map { it.first }
+                    }
+                    .filter { it.size == 2 }
+            }
+            .sumOf { it.reduce(Int::times) }
 
     val input = readInput("Day03")
-    println(part1(input))
-    println(part2(input))
+
+    val numbers = input.getNumberMap()
+    val symbols = input.parseWith(Regex("[^0-9\\.]")).toSymbolMap()
+    val gears = input.parseWith(Regex("[*]")).toSymbolMap()
+
+    println(part1(input, numbers, symbols))
+    println(part2(input, numbers, gears))
 }
