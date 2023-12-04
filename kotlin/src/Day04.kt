@@ -1,34 +1,34 @@
-fun main() {
-    fun part1(input: List<String>): Int {
-        val res = input
-            .map { it.split(':').last().split('|') }
-            .map { it[0].split(' ').filter { it.any { it.isDigit() } }.map { it.trim(' ').toInt() } to it[1].split(' ').filter { it.any { it.isDigit() } }.map { it.trim(' ').toInt() } }
-            .map { it.first.intersect(it.second) }
-            .filter { it.isNotEmpty() }
-            .map { it.drop(1).fold(1) { acc, _ -> acc * 2 } }
-            .sum()
-        return res
-    }
-
-    fun part2(input: List<String>): Int {
-        val res = input
-            .map { it.split(':').last().split('|') }
-            .map { it[0].split(' ').filter { it.any { it.isDigit() } }.map { it.trim(' ').toInt() } to it[1].split(' ').filter { it.any { it.isDigit() } }.map { it.trim(' ').toInt() } }
-            .map { 1 to it.first.intersect(it.second).size }
-            .toMutableList()
-
-        var i = 0
-        for (r in res) {
-            var j = 1
-            while (j <= r.second) {
-                val old = res[i + j]
-                res[i + j] = old.first + r.first to old.second
-                j++
+fun List<String>.parseCard() = asSequence()
+    .map { card ->
+        card.split(':')
+            .last()
+            .split('|', limit = 2)
+            .map { nums ->
+                nums.split(' ')
+                    .filter { it.any(Char::isDigit) }
+                    .map { it.trim(' ').toInt() }
             }
-            i++
-        }
-        return res.map { it.first }.sum()
     }
+
+fun main() {
+    fun part1(input: List<String>): Int = input
+        .parseCard()
+        .fold(0) { acc, row ->
+            acc + row[1].filter { it in row[0] }.run { (1 shl size) shr 1 } // some magic 2^correctNumbers.size / 2
+        }
+
+    fun part2(input: List<String>): Int = input
+        .parseCard()
+        .foldIndexed(mutableMapOf<Int, Int>()) { i, acc, row ->
+            acc.compute(i) { _, v -> 1 + (v ?: 0) }
+            row[1].filter { it in row[0] }
+                .forEachIndexed { j, _ ->
+                    acc.compute(i + j + 1) { _, v -> acc[i]!! + (v ?: 0) }
+                }
+            acc
+        }
+        .map { it.value }
+        .sum()
 
     val input = readInput("Day04")
     println(part1(input))
