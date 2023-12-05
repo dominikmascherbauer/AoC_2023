@@ -1,100 +1,65 @@
-import kotlin.math.min
-
-fun List<String>.parseMap(name: String) = dropWhile { it != name }
-    .drop(1)
+fun List<String>.parseMapAt(index: Int) = drop(index)
     .takeWhile { it.isNotEmpty() }
-    .fold(mutableListOf<Pair<LongRange, LongRange>>()) { acc, s ->
-        val mapping = s.split(' ', limit = 3).map { it.toLong() }
-        acc.add(mapping[1]..<(mapping[1] + mapping[2]) to mapping[0]..<(mapping[0] + mapping[2]))
-        acc
-    }
+    .map { it.split(' ').map(String::toLong) }
+    .associate { it[1]..<it[1] + it[2] to it[0]..<it[0] + it[2] }
 
-fun LongRange.mapSeeds(map: List<Pair<LongRange, LongRange>>): List<LongRange> {
-    var cur = first
-    val res = mutableListOf<LongRange>()
-    while (cur <= last) {
-        val x = map.firstOrNull { cur in it.first }
-        if (x == null) {
-            val start = cur
-            cur = min((last + 1), map.filter { it.first.first - cur > 0 }.minOfOrNull { it.first.first } ?: (last + 1))
-            res.add(start..<cur)
-        } else if (last <= x.first.last) {
-            res.add((x.second.first + (cur - x.first.first))..((x.second.first + (last - x.first.first))))
-            cur = last + 1
-        } else {
-            res.add((x.second.first + (cur - x.first.first))..x.second.last)
-            cur = x.first.last + 1
+fun Map<LongRange, LongRange>.mapSeeds(seeds: LongRange): List<LongRange> =
+    filter { seeds.first in it.key }
+        .map {
+            if (seeds.last <= it.key.last)
+                listOf(it.value.first + (seeds.first - it.key.first)..it.value.first + (seeds.last - it.key.first))
+            else
+                listOf(it.value.first + (seeds.first - it.key.first)..it.value.last)
+                    .plus(mapSeeds(it.key.last+1..seeds.last))
         }
-    }
-    return res
-}
+        .firstOrNull()
+        // add an imaginary range that does a one to one mapping
+        ?: plus(listOf(seeds.first..<
+                filter { it.key.first - seeds.first > 0 }
+                    .map { it.key.first }
+                    .plus(seeds.last+1)
+                    .min()
+                )
+                .associateWith { it }
+            )
+            .mapSeeds(seeds)
+
 
 fun main() {
-    fun part1(input: List<String>): Long {
-        val soil = input.parseMap("seed-to-soil map:")
-        val fertilizer = input.parseMap("soil-to-fertilizer map:")
-        val water = input.parseMap("fertilizer-to-water map:")
-        val light = input.parseMap("water-to-light map:")
-        val temperature = input.parseMap("light-to-temperature map:")
-        val humidity = input.parseMap("temperature-to-humidity map:")
-        val location = input.parseMap("humidity-to-location map:")
-
-        val res = input[0].split(' ').drop(1)
-            .map { it.toLong() }
-            .map { num -> soil.firstOrNull { num in it.first }?.run { second.first + (num - first.first) } ?: num }
-            .map { num -> fertilizer.firstOrNull { num in it.first }?.run { second.first + (num - first.first) } ?: num }
-            .map { num -> water.firstOrNull { num in it.first }?.run { second.first + (num - first.first) } ?: num }
-            .map { num -> light.firstOrNull { num in it.first }?.run { second.first + (num - first.first) } ?: num }
-            .map { num -> temperature.firstOrNull { num in it.first }?.run { second.first + (num - first.first) } ?: num }
-            .map { num -> humidity.firstOrNull { num in it.first }?.run { second.first + (num - first.first) } ?: num }
-            .map { num -> location.firstOrNull { num in it.first }?.run { second.first + (num - first.first) } ?: num }
-
-        //910845529
-        return res.min()
-    }
-
-    fun part2(input: List<String>): Long {
-        val soil = input.parseMap("seed-to-soil map:")
-        val fertilizer = input.parseMap("soil-to-fertilizer map:")
-        val water = input.parseMap("fertilizer-to-water map:")
-        val light = input.parseMap("water-to-light map:")
-        val temperature = input.parseMap("light-to-temperature map:")
-        val humidity = input.parseMap("temperature-to-humidity map:")
-        val location = input.parseMap("humidity-to-location map:")
-
-        val res = input[0].split(' ').drop(1)
-            .map { it.toLong() }
-            .fold(mutableMapOf<Long, Long>()) { acc, l ->
-                val x = acc.firstNotNullOfOrNull { if (it.value == -1L) it.key else null }
-                if (x == null) acc[l] = -1L else acc[x] = l
-                acc
+    fun part1(seeds: List<Long>, mapCascade: List<Map<LongRange, LongRange>>): Long = seeds
+        .minOf { seed ->
+            mapCascade.fold(seed) { acc, map ->
+                map.filter { acc in it.key }
+                    .map { acc + (it.value.first - it.key.first) }
+                    .firstOrNull()
+                    ?: acc
             }
-            .map { it.key..<it.key+it.value }
+        }
 
-        val res2 = res
-            .flatMap { it.mapSeeds(soil) }
-            .flatMap { it.mapSeeds(fertilizer) }
-            .flatMap { it.mapSeeds(water) }
-            .flatMap { it.mapSeeds(light) }
-            .flatMap { it.mapSeeds(temperature) }
-            .flatMap { it.mapSeeds(humidity) }
-            .flatMap { it.mapSeeds(location) }
+    fun part2(seeds: List<Long>, mapCascade: List<Map<LongRange, LongRange>>): Long = seeds
+        .mapIndexed { i, seed -> i to seed }
+        .filter { it.first % 2 == 0 }
+        .map { it.second..<it.second + seeds[it.first+1] }
+        .flatMap { seedRange ->
+            mapCascade.fold(listOf(seedRange)) { acc, map ->
+                acc.flatMap { map.mapSeeds(it) }
+            }
+        }
+        .minOf { it.first }
 
-        //77435348
-        return res2.map{ it.first }.min()
-    }
 
     val input = readInput("Day05")
-    /*
+
     val seeds: List<Long> = input[0]
         .split(' ')
         .drop(1)
         .map { it.toLong() }
-    val mapCascade: List<List<Pair<LongRange, LongRange>>> = input
-        .filter { ':' in it }
+    val mapCascade: List<Map<LongRange, LongRange>> = input
+        .mapIndexed { i, s -> i to s }
+        .filter { ':' in it.second }
         .drop(1)
-        .map { it }
-    */
-    println(part1(input))
-    println(part2(input))
+        .map { input.parseMapAt(it.first + 1) }
+
+    println(part1(seeds, mapCascade))
+    println(part2(seeds, mapCascade))
 }
