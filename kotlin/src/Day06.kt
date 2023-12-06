@@ -1,5 +1,5 @@
 private fun Pair<Long, Long>.marginOfError() =
-    1 + (0..first).last { it * (first - it) > second } - (0..first).first { it * (first - it) > second }
+    first + 1 - 2 * (0..first).first { it * (first - it) > second }
 
 fun main() {
     fun part1(input: List<String>): Long = input
