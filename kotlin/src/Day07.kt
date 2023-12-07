@@ -1,42 +1,52 @@
-val cardValues: Map<Char, Int> = mapOf(
-    'J' to 1,
-    '2' to 2,
-    '3' to 3,
-    '4' to 4,
-    '5' to 5,
-    '6' to 6,
-    '7' to 7,
-    '8' to 8,
-    '9' to 9,
-    'T' to 10,
-    'Q' to 11,
-    'K' to 12,
-    'A' to 13,
-)
+fun Char.cardOrder(): Char = when (this) {
+    'X' -> 'a'
+    '2' -> 'b'
+    '3' -> 'c'
+    '4' -> 'd'
+    '5' -> 'e'
+    '6' -> 'f'
+    '7' -> 'g'
+    '8' -> 'h'
+    '9' -> 'i'
+    'T' -> 'j'
+    'J' -> 'k'
+    'Q' -> 'l'
+    'K' -> 'm'
+    'A' -> 'n'
+    else -> 'z'
+}
+
+private infix fun String.replaceJokerIf(p: Boolean) =
+    if (p) replace('J', 'X') else this
+
+fun List<String>.calcBids(withJoker: Boolean = false) =
+    map { it.split(' ').zipWithNext { s, i -> (s replaceJokerIf withJoker) to i.toInt() }.first() }
+        .map { p ->
+            Triple(
+                p.first
+                    .filter { it != 'X' }
+                    .groupBy { it }
+                    .values
+                    .map { v -> v.size + p.first.count { it == 'X' } }
+                    .ifEmpty { listOf(5) },
+                p.first,
+                p.second
+            )
+        }
+        .sortedWith(
+            compareBy(
+                { -it.first.size },     // first sort by number of different cards: AAAAA > (AAAAK | AAAKK) > (AAAKQ | AAKKQ) > AAKQT > AKQT9
+                { it.first.max() },     // then by number of a kind of card: AAAAK > AAAKK, AAAKQ > AAKKQ
+                { it.second.map(Char::cardOrder).toString() }     // then by the first higher card (AAAAK > AAAKA > KAAAA)
+            )
+        )
+        .foldIndexed(0) { i, acc, v -> acc + v.third * (i+1)}
+
 
 fun main() {
-    fun part1(input: List<String>): Int {
-        val res = input
-            .map { it.split(' ') }
-            .map { it[0] to it[1].toInt() }
-            .map { it.first.groupBy { it }.mapValues { it.value.size } to it }
-            .sortedWith(compareBy({ -it.first.size }, {it.first.maxOf { it.value }}, {cardValues[it.second.first[0]]}, {cardValues[it.second.first[1]]}, {cardValues[it.second.first[2]]}, {cardValues[it.second.first[3]]}, {cardValues[it.second.first[4]]}))
-            .foldIndexed(0) { i, acc, v -> acc + v.second.second * (i+1)}
+    fun part1(input: List<String>): Int = input.calcBids()
 
-        return res
-    }
-
-    fun part2(input: List<String>): Int {
-        val res = input
-            .map { it.split(' ') }
-            .map { it[0] to it[1].toInt() }
-            .map { p -> p.first.filter { it != 'J' }.groupBy { it }.mapValues { it.value.size + p.first.count { it == 'J' } } to p }
-            .map { p -> if (p.second.first.count { it == 'J' } == 5) mapOf('J' to 5) to p.second else p }
-            .sortedWith(compareBy({ -it.first.size }, {it.first.maxOf { it.value }}, {cardValues[it.second.first[0]]}, {cardValues[it.second.first[1]]}, {cardValues[it.second.first[2]]}, {cardValues[it.second.first[3]]}, {cardValues[it.second.first[4]]}))
-            .foldIndexed(0) { i, acc, v -> acc + v.second.second * (i+1)}
-
-        return res
-    }
+    fun part2(input: List<String>): Int = input.calcBids(true)
 
     val input = readInput("Day07")
     println(part1(input))
