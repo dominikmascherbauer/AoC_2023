@@ -1,5 +1,13 @@
 private fun Pair<Long, Long>.marginOfError() =
-    first + 1 - 2 * (0..first).first { it * (first - it) > second }
+    first - 2 * binSearch(0, first/2, first/4) + 1
+
+private fun Pair<Long, Long>.binSearch(start: Long, end: Long, cur: Long): Long =
+    if (cur * (first - cur) < second)
+        binSearch(cur + 1, end, (cur + 1 + end)/2)
+    else if ((cur - 1) * (first - (cur - 1)) >= second)
+        binSearch(start, cur - 1, (cur - 1 + start)/2)
+    else
+        cur
 
 fun main() {
     fun part1(input: List<String>): Long = input
