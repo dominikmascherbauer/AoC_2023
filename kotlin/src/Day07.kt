@@ -18,26 +18,30 @@ fun main() {
     }
 
     fun List<String>.calcBids(withJoker: Boolean = false) =
-        map { it.split(' ').zipWithNext { s, i -> (if (withJoker) s.replace('J', 'X') else s) to i.toInt() }.first() }
-            .map { p ->
-                Triple(
-                    p.first
-                        .filter { it != 'X' }
-                        .groupBy { it }
-                        .values
-                        .map { v -> v.size + p.first.count { it == 'X' } }
-                        .ifEmpty { listOf(5) },
-                    p.first,
-                    p.second
-                )
-            }
-            .sortedWith(
-                compareBy(
-                    { -it.first.size },     // first sort by number of different cards: AAAAA > (AAAAK | AAAKK) > (AAAKQ | AAKKQ) > AAKQT > AKQT9
-                    { it.first.max() },     // then by number of a kind of card: AAAAK > AAAKK, AAAKQ > AAKKQ
-                    { it.second.map(Char::cardOrder).toString() }     // then by the first higher card (AAAAK > AAAKA > KAAAA)
-                )
+        map {
+            it.split(' ')
+                .zipWithNext { s, i -> (if (withJoker) s.replace('J', 'X') else s) to i.toInt() }
+                .first()
+        }
+        .map { p ->
+            Triple(
+                p.first
+                    .filter { it != 'X' }
+                    .groupBy { it }
+                    .values
+                    .map { v -> v.size + p.first.count { it == 'X' } }
+                    .ifEmpty { listOf(5) },
+                p.first,
+                p.second
             )
+        }
+        .sortedWith(
+            compareBy(
+                { -it.first.size },     // first sort by number of different cards: AAAAA > (AAAAK | AAAKK) > (AAAKQ | AAKKQ) > AAKQT > AKQT9
+                { it.first.max() },     // then by number of a kind of card: AAAAK > AAAKK, AAAKQ > AAKKQ
+                { it.second.map(Char::cardOrder).toString() }     // then by the first higher card (AAAAK > AAAKA > KAAAA)
+            )
+        )
             .foldIndexed(0) { i, acc, v -> acc + v.third * (i+1)}
 
     fun part1(input: List<String>): Int = input.calcBids()
