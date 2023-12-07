@@ -1,20 +1,20 @@
-val maxCubes = mapOf(
-    "red" to 12,
-    "green" to 13,
-    "blue" to 14
-)
-
-fun String.parseDigit() = this.dropWhile { !it.isDigit() }.takeWhile { it.isDigit() }.toInt()
-fun String.parseColor() = this.dropWhile { !it.isLetter() }.takeWhile { it.isLetter() }
-fun List<String>.parseGames() =
-    this.map { l ->
-        l.drop(l.indexOf(':'))
-            .split(';')
-            .flatMap { it.split(',') }
-            .map { it.parseColor() to it.parseDigit() }
-    }
-
 fun main() {
+    val maxCubes = mapOf(
+        "red" to 12,
+        "green" to 13,
+        "blue" to 14
+    )
+
+    fun String.parseDigit() = this.dropWhile { !it.isDigit() }.takeWhile { it.isDigit() }.toInt()
+    fun String.parseColor() = this.dropWhile { !it.isLetter() }.takeWhile { it.isLetter() }
+    fun List<String>.parseGames() =
+        this.map { l ->
+            l.drop(l.indexOf(':'))
+                .split(';')
+                .flatMap { it.split(',') }
+                .map { it.parseColor() to it.parseDigit() }
+        }
+
     fun part1(input: List<String>): Int = input
         .parseGames()
         .mapIndexed { i, l -> i+1 to l }

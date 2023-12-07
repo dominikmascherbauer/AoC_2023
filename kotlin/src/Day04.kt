@@ -1,16 +1,16 @@
-fun List<String>.parseCard() = asSequence()
-    .map { card ->
-        card.split(':')
-            .last()
-            .split('|', limit = 2)
-            .map { nums ->
-                nums.split(' ')
-                    .filter { it.any(Char::isDigit) }
-                    .map { it.trim(' ').toInt() }
-            }
-    }
-
 fun main() {
+    fun List<String>.parseCard() =
+        map { card ->
+            card.split(':')
+                .last()
+                .split('|', limit = 2)
+                .map { nums ->
+                    nums.split(' ')
+                        .filter { it.any(Char::isDigit) }
+                        .map { it.trim(' ').toInt() }
+                }
+        }
+
     fun part1(input: List<String>): Int = input
         .parseCard()
         .fold(0) { acc, row ->

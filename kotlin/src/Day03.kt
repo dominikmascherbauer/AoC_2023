@@ -1,14 +1,15 @@
-fun List<String>.parseWith(regex: Regex) =
-    foldIndexed(sequenceOf<Pair<Int, MatchResult>>()) { i, acc, s -> regex.findAll(s).map { i to it }.plus(acc) }
-
-fun Sequence<Pair<Int, MatchResult>>.toSymbolMap() =
-    groupBy({ it.first }) { it.second.range.first }
-fun List<String>.getNumberMap() =
-    parseWith(Regex("[0-9]+"))
-        .groupBy({ it.first }) { it.second.value.toInt() to it.second.range.first-1..it.second.range.last+1 }
-
 fun main() {
-    fun part1(input: List<String>, numbers: Map<Int, List<Pair<Int, IntRange>>>, symbols: Map<Int, List<Int>>): Int = numbers
+    fun List<String>.parseWith(regex: Regex) =
+        foldIndexed(sequenceOf<Pair<Int, MatchResult>>()) { i, acc, s -> regex.findAll(s).map { i to it }.plus(acc) }
+
+    fun Sequence<Pair<Int, MatchResult>>.toSymbolMap() =
+        groupBy({ it.first }) { it.second.range.first }
+    fun List<String>.getNumberMap() =
+        parseWith(Regex("[0-9]+"))
+            .groupBy({ it.first }) { it.second.value.toInt() to it.second.range.first-1..it.second.range.last+1 }
+
+
+    fun part1(numbers: Map<Int, List<Pair<Int, IntRange>>>, symbols: Map<Int, List<Int>>): Int = numbers
         .flatMap { row ->
             row.value
                 .filter { num ->
@@ -21,7 +22,7 @@ fun main() {
         }
         .sum()
 
-    fun part2(input: List<String>, numbers: Map<Int, List<Pair<Int, IntRange>>>, gears: Map<Int, List<Int>>): Int = gears
+    fun part2(numbers: Map<Int, List<Pair<Int, IntRange>>>, gears: Map<Int, List<Int>>): Int = gears
             .flatMap { row ->
                 row.value
                     .map { g ->
@@ -38,9 +39,9 @@ fun main() {
     val input = readInput("Day03")
 
     val numbers = input.getNumberMap()
-    val symbols = input.parseWith(Regex("[^0-9\\.]")).toSymbolMap()
+    val symbols = input.parseWith(Regex("[^0-9.]")).toSymbolMap()
     val gears = input.parseWith(Regex("[*]")).toSymbolMap()
 
-    println(part1(input, numbers, symbols))
-    println(part2(input, numbers, gears))
+    println(part1(numbers, symbols))
+    println(part2(numbers, gears))
 }
