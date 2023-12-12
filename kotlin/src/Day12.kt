@@ -1,70 +1,55 @@
 fun main() {
-    val cache = mutableMapOf<Pair<Char, Triple<Int,Int,Int>>, Long>()
-
-    fun String.permutationsV2(nWorking: Int, nBroken: Int, nums: Sequence<Int>, currentBroken: Int = 0, replaced: Char = '?'): Long {
-        return if (nWorking < 0 || nBroken < 0)
-            0L
-        else if (nums.firstOrNull() != null && (nums.first() < currentBroken || (replaced == '.' && currentBroken != 0 && nums.first() != currentBroken)))
-            0L
-        else if (nWorking == 0 && nBroken == 0 && this.isEmpty())
-            1L
-        else if (cache.containsKey(replaced to Triple(this.length, nWorking, nBroken)))
-            cache[replaced to Triple(this.length,nWorking,nBroken)]!!
-        else {
-            val first = this.first()
-            val rest = this.drop(1)
-            val (newNums, newCurrentBroken) = if (replaced == '.' && currentBroken != 0)
-                nums.drop(1) to 0
+    fun String.countPermutations(): Long {
+        val cache = hashMapOf<Pair<Char, Pair<Int, Int>>, Long>()
+        fun String.countPermutationsAux(missing: Int, missingBroken: Int, brokenGroups: List<Int>, curGroupLen: Int = 0): Long {
+            return if (missingBroken < 0 || missing < missingBroken)
+                0
+            else if (isEmpty() || brokenGroups.isEmpty())
+                1
             else
-                nums to currentBroken
-            cache[replaced to Triple(this.length, nWorking, nBroken)] = when (first) {
-                '.' -> rest.permutationsV2(nWorking, nBroken, newNums, newCurrentBroken, '.')
-                '#' -> rest.permutationsV2(nWorking, nBroken, newNums, newCurrentBroken + 1, '#')
-                else -> rest.permutationsV2(nWorking - 1, nBroken, newNums, newCurrentBroken, '.') +
-                        rest.permutationsV2(nWorking, nBroken - 1, newNums, newCurrentBroken + 1, '#')
-            }
-            cache[replaced to Triple(this.length, nWorking, nBroken)]!!
-        }
-    }
+                when (first()) {
+                    '.' -> cache.getOrPut(first() to (missing to missingBroken)) {
+                        drop(1).countPermutationsAux(missing, missingBroken, brokenGroups)
+                    }
 
-    fun part1(input: List<String>): Long {
-        val res = input.map { row ->
-            val nums = Regex("[0-9]+").findAll(row).map { it.value.toInt() }
-            val nKnownBroken = row.count { it == '#' }
-            val nUnknown = row.count { it == '?' }
-            val nBroken = nums.sum()
-            val nUnknownBroken = nBroken - nKnownBroken
-
-            assert(nUnknown >= nUnknownBroken)
-
-            cache.clear()
-            val x = row.split(' ')[0].permutationsV2(nUnknown - nUnknownBroken, nUnknownBroken, nums)
-            x
+                    '#' -> when (drop(1).firstOrNull()) {
+                        // current broken sequence ends -> check if it is valid
+                        '.' -> if (brokenGroups.first() != curGroupLen + 1) 0 else drop(1).countPermutationsAux(missing, missingBroken, brokenGroups.drop(1))
+                        // current broken sequence goes on -> early stop if it next is not valid
+                        '#' -> if (curGroupLen + 2 > brokenGroups.first()) 0 else drop(1).countPermutationsAux(missing, missingBroken, brokenGroups, curGroupLen + 1)
+                        // we are at the end of the input -> only reachable if we have a valid permutation
+                        null -> 1
+                        // next char is '?', split and go on with both
+                        else -> "${first()}#${drop(2)}".countPermutationsAux(missing - 1, missingBroken - 1, brokenGroups, curGroupLen) +
+                                "${first()}.${drop(2)}".countPermutationsAux(missing - 1, missingBroken, brokenGroups, curGroupLen)
+                    }
+                    // current char is '?', split and go on, only happens if previous char was '.' or at the very first char
+                    else -> "#${drop(1)}".countPermutationsAux(missing - 1, missingBroken - 1, brokenGroups, curGroupLen) +
+                            ".${drop(1)}".countPermutationsAux(missing - 1, missingBroken, brokenGroups, curGroupLen)
+                }
         }
 
-        return res.sumOf { it }
+        val brokenGroups = Regex("[0-9]+").findAll(this).map { m -> m.value.toInt() }.toList()
+        return split(' ')[0].countPermutationsAux(count { it == '?' }, brokenGroups.sum() - count { it == '#' }, brokenGroups)
     }
 
-    fun part2(input: List<String>): Long {
-        val res = input
-            .map { it.split(' ')[0].plus('?').repeat(5).dropLast(1).plus(' ').plus(it.split(' ')[1].plus(',').repeat(5)) }
-            .mapIndexed { i, row ->
-                val nums = Regex("[0-9]+").findAll(row).map { it.value.toInt() }
-                val nKnownBroken = row.count { it == '#' }
-                val nUnknown = row.count { it == '?' }
-                val nBroken = nums.sum()
-                val nUnknownBroken = nBroken - nKnownBroken
+    fun part1(input: List<String>): Long =
+        input.sumOf { it.countPermutations() }
 
-                assert(nUnknown >= nUnknownBroken)
-
-                cache.clear()
-                val x = row.split(' ')[0].permutationsV2(nUnknown - nUnknownBroken,nUnknownBroken,nums)
-                //println("${i + 1}: $x from $row")
-                x
-            }
-
-        return res.sumOf { it }
-    }
+    fun part2(input: List<String>): Long = input
+        .map {
+            it.split(' ')[0]
+                .plus('?')
+                .repeat(5)
+                .dropLast(1)
+                .plus(' ')
+                .plus(
+                    it.split(' ')[1]
+                        .plus(',')
+                        .repeat(5)
+                )
+        }
+        .sumOf { it.countPermutations() }
 
     val input = readInput("Day12")
     println(part1(input))
