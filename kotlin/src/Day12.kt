@@ -2,16 +2,21 @@ fun main() {
     fun String.countPermutations(): Long {
         val cache = hashMapOf<Pair<Char, Pair<Int, Int>>, Long>()
         fun String.countPermutationsAux(missing: Int, missingBroken: Int, brokenGroups: List<Int>, curGroupLen: Int = 0): Long {
+            // if too many working or broken springs were replaced for '?' chars return 0
+            // as it is impossible to get a valid permutation without placing exactly the amount of broken spring required
             return if (missingBroken < 0 || missing < missingBroken)
                 0
+            // return 1 for a valid permutation
+            // a permutation is valid if we are at the of the input string, or we have no more groups to cover (implies that all required broken springs are set)
             else if (isEmpty() || brokenGroups.isEmpty())
                 1
             else
                 when (first()) {
+                    // current char is '.', here we are in a safe place to cache the result (would be enough to just cache if the next char is a '#', but who cares)
                     '.' -> cache.getOrPut(first() to (missing to missingBroken)) {
                         drop(1).countPermutationsAux(missing, missingBroken, brokenGroups)
                     }
-
+                    // current char is '#', we have to check the next char in order to further proceed
                     '#' -> when (drop(1).firstOrNull()) {
                         // current broken sequence ends -> check if it is valid
                         '.' -> if (brokenGroups.first() != curGroupLen + 1) 0 else drop(1).countPermutationsAux(missing, missingBroken, brokenGroups.drop(1))
