@@ -20,3 +20,30 @@ fun gcd(a: Long, b: Long): Long =
  */
 fun lcm(a: Long, b: Long): Long =
     a * (b / gcd(a, b))
+
+
+/**
+ * transposes a rectangular grid
+ */
+fun List<String>.transpose(): List <String> =
+    List(get(0).length) { i ->
+        map { it[i] }.joinToString("")
+    }
+
+/**
+ * rotates a rectangular grid to the left
+ *  -> last col will be first row
+ */
+fun List<String>.rotateLeft(): List<String> =
+    List(get(0).length) { i ->
+        map { it[it.length - i - 1] }.joinToString("")
+    }
+
+/**
+ * rotates a rectangular grid to the right
+ *  -> first col will be first row
+ */
+fun List<String>.rotateRight(): List<String> =
+    List(get(0).length) { i ->
+        reversed().map { it[i] }.joinToString("")
+    }

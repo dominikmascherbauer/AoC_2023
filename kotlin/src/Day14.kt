@@ -1,14 +1,4 @@
 fun main() {
-    fun List<String>.rotateLeft(): List<String> =
-        List(get(0).length) { i ->
-            map { it[it.length - i - 1] }.joinToString("")
-        }
-
-    fun List<String>.rotateRight(): List<String> =
-        List(get(0).length) { i ->
-            reversed().map { it[i] }.joinToString("")
-        }
-
     // somehow gravity always pulls to the left, so we have to rotate the grid accordingly before, lol xd
     fun List<String>.applyGravity(): List<String> =
         map { s ->

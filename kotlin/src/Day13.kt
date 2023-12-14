@@ -29,9 +29,7 @@ fun main() {
         }
         // transpose each grid
         .map { grid ->
-            grid to List(grid[0].length) { i ->
-                grid.map { it[i] }.joinToString()
-            }
+            grid to grid.transpose()
         }
 
     println(part1(input))
