@@ -1,205 +1,51 @@
 fun main() {
-    fun part1(input: List<String>): Int {
-        var lastRolled = List(input[0].length) { it -> -1 }
-
-        val res = input.mapIndexed { i, s ->
-            s.mapIndexed { j, c ->
-                when (c) {
-                    'O' -> {
-                        if (lastRolled[j] >= i) {
-                            val nextRock = input.mapIndexed { i,s -> i to s }.drop(i).firstOrNull { (it.second[j] == 'O' && lastRolled[j] < it.first) || it.second[j] == '#' }
-                            if (nextRock == null || nextRock.second[j] == '#')
-                                '.'
-                            else {
-                                lastRolled = lastRolled.mapIndexed { k, l -> if (k == j) nextRock.first else l }
-                                'O'
-                            }
-                        } else
-                            'O'
-                    }
-                    '#' -> '#'
-                    else -> {
-                        val nextRock = input.mapIndexed { i,s -> i to s }.drop(i).firstOrNull { (it.second[j] == 'O' && lastRolled[j] < it.first) || it.second[j] == '#' }
-                        if (nextRock == null || nextRock.second[j] == '#')
-                            '.'
-                        else {
-                            lastRolled = lastRolled.mapIndexed { k, l -> if (k == j) nextRock.first else l }
-                            'O'
-                        }
-                    }
-                }
-            }
+    fun List<String>.rotateLeft(): List<String> =
+        List(get(0).length) { i ->
+            map { it[it.length - i - 1] }.joinToString("")
         }
 
-        return res.mapIndexed { i, s -> s.count { it == 'O' } * (res.size - i) }.sum()
-    }
-
-    fun part2(input: List<String>): List<String> {
-        var lastRolled = List(input[0].length) { it -> -1 }
-        var res = input.mapIndexed { i, s ->
-            s.mapIndexed { j, c ->
-                when (c) {
-                    'O' -> {
-                        if (lastRolled[j] >= i) {
-                            val nextRock = input.mapIndexed { i,s -> i to s }.drop(i).firstOrNull { (it.second[j] == 'O' && lastRolled[j] < it.first) || it.second[j] == '#' }
-                            if (nextRock == null || nextRock.second[j] == '#')
-                                '.'
-                            else {
-                                lastRolled = lastRolled.mapIndexed { k, l -> if (k == j) nextRock.first else l }
-                                'O'
-                            }
-                        } else
-                            'O'
-                    }
-                    '#' -> '#'
-                    else -> {
-                        val nextRock = input.mapIndexed { i,s -> i to s }.drop(i).firstOrNull { (it.second[j] == 'O' && lastRolled[j] < it.first) || it.second[j] == '#' }
-                        if (nextRock == null || nextRock.second[j] == '#')
-                            '.'
-                        else {
-                            lastRolled = lastRolled.mapIndexed { k, l -> if (k == j) nextRock.first else l }
-                            'O'
-                        }
-                    }
-                }
-            }
+    fun List<String>.rotateRight(): List<String> =
+        List(get(0).length) { i ->
+            reversed().map { it[i] }.joinToString("")
         }
 
-        //res.forEach { println(it.joinToString().replace(", ", "")) }
-        //println()
-
-        lastRolled = List(input.size) { it -> -1 }
-        res = res.mapIndexed { i, s ->
-            s.mapIndexed { j, c ->
-                when (c) {
-                    'O' -> {
-                        if (lastRolled[i] >= j) {
-                            val nextRock = s.mapIndexed { k, ch -> k to ch }.drop(j).firstOrNull { (it.second == 'O' && lastRolled[i] < it.first) || it.second == '#' }
-                            if (nextRock == null || nextRock.second == '#')
-                                '.'
-                            else {
-                                lastRolled = lastRolled.mapIndexed { k, l -> if (k == i) nextRock.first else l }
-                                'O'
-                            }
-                        } else
-                            'O'
-                    }
-                    '#' -> '#'
-                    else -> {
-                        val nextRock = s.mapIndexed { k, ch -> k to ch }.drop(j).firstOrNull { (it.second == 'O' && lastRolled[i] < it.first) || it.second == '#' }
-                        if (nextRock == null || nextRock.second == '#')
-                            '.'
-                        else {
-                            lastRolled = lastRolled.mapIndexed { k, l -> if (k == i) nextRock.first else l }
-                            'O'
-                        }
-                    }
+    // somehow gravity always pulls to the left, so we have to rotate the grid accordingly before, lol xd
+    fun List<String>.applyGravity(): List<String> =
+        map { s ->
+            s.split("#")
+                .joinToString("#") {
+                    it.toList().sortedDescending().joinToString("")
                 }
-            }
         }
 
-        //res.forEach { println(it.joinToString().replace(", ", "")) }
-        //println()
+    // gravity pulls rocks to the left but weight pulls downwards,  ... weird <insert jeremy clarkson "Anyway">, lets just rotate accordingly before
+    fun List<String>.getWeight(): Int =
+        mapIndexed { i, s -> i to s }
+            .sumOf { (i, s) -> s.count { it == 'O' } * (size - i) }
 
-        lastRolled = List(input[0].length) { it -> -1 }
-        res = res.reversed()
-        res = res.mapIndexed { i, s ->
-            s.mapIndexed { j, c ->
-                when (c) {
-                    'O' -> {
-                        if (lastRolled[j] >= i) {
-                            val nextRock = res.mapIndexed { i,s -> i to s }.drop(i).firstOrNull { (it.second[j] == 'O' && lastRolled[j] < it.first) || it.second[j] == '#' }
-                            if (nextRock == null || nextRock.second[j] == '#')
-                                '.'
-                            else {
-                                lastRolled = lastRolled.mapIndexed { k, l -> if (k == j) nextRock.first else l }
-                                'O'
-                            }
-                        } else
-                            'O'
-                    }
-                    '#' -> '#'
-                    else -> {
-                        val nextRock = res.mapIndexed { i,s -> i to s }.drop(i).firstOrNull { (it.second[j] == 'O' && lastRolled[j] < it.first) || it.second[j] == '#' }
-                        if (nextRock == null || nextRock.second[j] == '#')
-                            '.'
-                        else {
-                            lastRolled = lastRolled.mapIndexed { k, l -> if (k == j) nextRock.first else l }
-                            'O'
-                        }
-                    }
-                }
-            }
-        }
-        res = res.reversed()
+    fun part1(input: List<String>): Int =
+        input.rotateLeft()
+            .applyGravity()
+            .rotateRight()
+            .getWeight()
 
-        //res.forEach { println(it.joinToString().replace(", ", "")) }
-        //println()
+    fun part2(input: List<String>): Int =
+        generateSequence(input) {
+            it.rotateLeft().applyGravity()   // roll north
+                .rotateRight().applyGravity()   // roll west
+                .rotateRight().applyGravity()   // roll south
+                .rotateRight().applyGravity()   // roll east
+                .rotateLeft().rotateLeft()      // rotate back to initial position for weight calculation
+        }.runningFold(listOf<List<String>>()) { acc, grid -> acc.plus(listOf(grid)) }
+            .drop(1)    // ditch empty list in the beginning
+            .first { it.dropLast(1).contains(it.last()) }
+            .run { indexOfFirst { it == last() } to dropLast(1) }
+            // get grid iteration 1_000_000_000 (list starts with iteration 0 = input)
+            .run { second[first + ((1_000_000_000 - first) % (second.size - first))] }
+            .getWeight()
 
-        lastRolled = List(input.size) { it -> -1 }
-        res = res.mapIndexed { i, s ->
-            val r = s.reversed()
-            r.mapIndexed { j, c ->
-                when (c) {
-                    'O' -> {
-                        if (lastRolled[i] >= j) {
-                            val nextRock = r.mapIndexed { k, ch -> k to ch }.drop(j).firstOrNull { (it.second == 'O' && lastRolled[i] < it.first) || it.second == '#' }
-                            if (nextRock == null || nextRock.second == '#')
-                                '.'
-                            else {
-                                lastRolled = lastRolled.mapIndexed { k, l -> if (k == i) nextRock.first else l }
-                                'O'
-                            }
-                        } else
-                            'O'
-                    }
-                    '#' -> '#'
-                    else -> {
-                        val nextRock = r.mapIndexed { k, ch -> k to ch }.drop(j).firstOrNull { (it.second == 'O' && lastRolled[i] < it.first) || it.second == '#' }
-                        if (nextRock == null || nextRock.second == '#')
-                            '.'
-                        else {
-                            lastRolled = lastRolled.mapIndexed { k, l -> if (k == i) nextRock.first else l }
-                            'O'
-                        }
-                    }
-                }
-            }.reversed()
-        }
-
-        return res.map { it.joinToString().replace(", ", "") }
-    }
 
     val input = readInput("Day14")
     println(part1(input))
-    //println(part2(input))
-
-    var l: Long = 0
-    var res = part2(input)
-    val results = mutableListOf<Pair<Int, List<String>>>()
-    var loopAt = 0
-    while (l < 10000) {
-        //println("After ${l+2} iterations:")
-        val weight = res.mapIndexed { i, s -> s.count { it == 'O' } * (res.size - i) }.sum()
-        val candidates = results.filter { it.first == weight }
-        if (candidates.isNotEmpty()) {
-            val equal = candidates.filter { it.second.zip(res).all { (a, b) -> a == b } }
-            if (equal.isNotEmpty()) {
-                println("found a loop")
-                loopAt = results.indexOf(equal.first())
-                break
-            }
-        }
-        results.add(weight to res)
-        res = part2(res)
-        l++
-    }
-
-    println("loops from $loopAt for ${results.size - loopAt} iterations\n")
-
-    val index = loopAt + (1_000_000_000 - loopAt - 1) % (results.size - loopAt)
-    println("after 1_000_000_000 iterations: (Using result of iteration $index)")
-
-    //results[index].second.forEach { println(it) }
-    println(results[index].first)
+    println(part2(input))
 }
