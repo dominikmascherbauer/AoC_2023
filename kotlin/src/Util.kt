@@ -1,9 +1,14 @@
 import java.io.File
-
 /**
  * Reads lines from the given resource text file.
  */
 fun readInput(name: String) = File(ClassLoader.getSystemResource(name).path).readLines()
+
+data class Point<T>(val x: Int, val y: Int, val value: T) {
+    // create new point containing the new value
+    fun setValue(newValue: T): Point<T> =
+        Point(x, y, newValue)
+}
 
 /**
  * Greatest common divisor (gcd) for two Long values
