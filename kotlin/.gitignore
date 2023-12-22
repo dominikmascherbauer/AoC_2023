@@ -1,3 +1,6 @@
+### AoC inputs ###
+resources/
+
 ### IntelliJ IDEA ###
 out/
 !**/src/main/**/out/
